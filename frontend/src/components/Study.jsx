@@ -1,11 +1,6 @@
 import { useGame } from '../utils/GameContext';
 import { motion } from 'framer-motion';
-import EditorComponent from 'react-simple-code-editor';
-import Prism from 'prismjs';
-import 'prismjs/components/prism-javascript';
-import 'prismjs/themes/prism-tomorrow.css';
-
-const Editor = EditorComponent.default || EditorComponent;
+import Editor from '@monaco-editor/react';
 
 export default function Study() {
   const { challenge, studyTimeRemaining, studyProgress, studyCanStart, triggerStartRace, isHost } = useGame();
@@ -53,25 +48,22 @@ export default function Study() {
           >
             {challenge.description}
           </motion.p>
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }}
-            className="bg-[#0a1018] border border-border rounded-lg p-5 overflow-x-auto"
-          >
-            <Editor
-              value={challenge.brokenCode}
-              onValueChange={() => {}}
-              highlight={code => Prism.highlight(code, Prism.languages.javascript, 'javascript')}
-              padding={10}
-              disabled
-              style={{
-                fontFamily: '"JetBrains Mono", monospace',
-                fontSize: 15,
-                lineHeight: 1.8,
-                backgroundColor: 'transparent',
-              }}
-              className="study-code pointer-events-none"
-            />
-          </motion.div>
+            <div className="h-64 sm:h-96 rounded-lg overflow-hidden border border-border">
+              <Editor
+                height="100%"
+                language="javascript"
+                theme="vs-dark"
+                value={challenge.brokenCode}
+                options={{
+                  readOnly: true,
+                  minimap: { enabled: false },
+                  fontSize: 14,
+                  padding: { top: 16 },
+                  scrollBeyondLastLine: false,
+                  wordWrap: 'on'
+                }}
+              />
+            </div>
         </div>
 
         <div className="lg:w-80 border-t lg:border-t-0 lg:border-l border-border bg-surface/30 p-5 pb-24 flex flex-col">
