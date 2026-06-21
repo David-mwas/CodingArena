@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
-import useWebSocket from 'react-use-websocket';
+import useWebSocketLib from 'react-use-websocket';
+const useWebSocket = useWebSocketLib.default || useWebSocketLib;
 import { CHALLENGES, OPPONENT_NAMES, SPEED_PROFILES } from '../challenges';
 import { playSound } from '../audio';
 import { music } from '../music';
@@ -64,34 +65,6 @@ export function GameProvider({ children }) {
     id: socketId,
     send: sendMessage
   };
-
-  useEffect(() => {
-    if (!lastMessage) return;
-    const e = { data: lastMessage.data };
-      if (isAiMode) return;
-      const msg = JSON.parse(e.data);
-      if (msg.type === 'init') {
-        setSocketId(msg.id);
-        socketIdRef.current = msg.id;
-      }
-      if (msg.type === 'sync') {
-        setPlayers(msg.state.players);
-        setIsHost(msg.state.players[socketIdRef.current]?.isHost || false);
-      }
-      if (msg.type === 'all_ready') {
-        startCountdown();
-      }
-      if (msg.type === 'study_started') {
-        const ch = CHALLENGES.find(c => c.id === msg.challengeId);
-        enterStudyPhase(ch);
-      }
-      if (msg.type === 'race_started') {
-        startRacingPhase();
-      }
-      if (msg.type === 'game_over') {
-        handleGameOver(msg.winnerId);
-      }
-  }, [lastMessage, roomCode, startCountdown, enterStudyPhase, socketId]);
 
   const handleResetStats = useCallback(() => {
     const fresh = { totalWins: 0, totalLosses: 0, currentStreak: 0, bestStreak: 0, fastestWin: null, totalGames: 0, challengeBest: {} };
@@ -471,6 +444,34 @@ export function GameProvider({ children }) {
       handleGameOver('opponent');
     }
   }, [gameActive, isAiMode, socket, handleGameOver]);
+
+  useEffect(() => {
+    if (!lastMessage) return;
+    const e = { data: lastMessage.data };
+      if (isAiMode) return;
+      const msg = JSON.parse(e.data);
+      if (msg.type === 'init') {
+        setSocketId(msg.id);
+        socketIdRef.current = msg.id;
+      }
+      if (msg.type === 'sync') {
+        setPlayers(msg.state.players);
+        setIsHost(msg.state.players[socketIdRef.current]?.isHost || false);
+      }
+      if (msg.type === 'all_ready') {
+        startCountdown();
+      }
+      if (msg.type === 'study_started') {
+        const ch = CHALLENGES.find(c => c.id === msg.challengeId);
+        enterStudyPhase(ch);
+      }
+      if (msg.type === 'race_started') {
+        startRacingPhase();
+      }
+      if (msg.type === 'game_over') {
+        handleGameOver(msg.winnerId);
+      }
+  }, [lastMessage, roomCode, startCountdown, enterStudyPhase, socketId, startRacingPhase, handleGameOver, isAiMode]);
 
   let currentPlayer = isAiMode ? { ready: true, progress: testResults?.filter(r=>r.ok)?.length || 0, status: 'Thinking...' } : players[socketId];
   let opponent = isAiMode ? null : Object.entries(players).find(([id]) => id !== socketId);
