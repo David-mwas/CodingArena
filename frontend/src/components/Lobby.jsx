@@ -3,7 +3,33 @@ import { useGame } from '../utils/GameContext';
 import { motion } from 'framer-motion';
 
 export default function Lobby() {
-  const { roomCode, copyRoomCode, playerName, currentPlayer, opponentData, players, toggleReady, startCountdown } = useGame();
+  const { roomCode, copyRoomCode, playerName, currentPlayer, opponentData, players, toggleReady, startCountdown, handleCreateRoom, showToast, isHost, socket } = useGame();
+
+  // Auto-pair with AI if waiting alone for 60 seconds
+  useEffect(() => {
+    if (roomCode === 'AI_MATCH' || opponentData) return;
+    
+    const t = setTimeout(() => {
+      showToast('Taking too long? Automatically paired with an AI bot!', 'info');
+      handleCreateRoom(true); // Switch to AI match
+    }, 60000); // 1 minute
+    
+    return () => clearTimeout(t);
+  }, [roomCode, opponentData, handleCreateRoom, showToast]);
+
+  // Force start match if opponent is AFK (not ready) for 30 seconds
+  useEffect(() => {
+    if (roomCode === 'AI_MATCH' || !opponentData) return;
+    if (currentPlayer?.ready && !opponentData.ready) {
+      const t = setTimeout(() => {
+        if (isHost) {
+          showToast('Opponent took too long! Forcing match to start...', 'warn');
+          startCountdown(); // Force start
+        }
+      }, 30000); // 30 seconds
+      return () => clearTimeout(t);
+    }
+  }, [roomCode, opponentData, currentPlayer?.ready, isHost, startCountdown, showToast]);
 
   useEffect(() => {
     if (roomCode === 'AI_MATCH') {
