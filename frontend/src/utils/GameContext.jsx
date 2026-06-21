@@ -42,6 +42,12 @@ export function GameProvider({ children }) {
   const [runError, setRunError] = useState(null);
   const [hintUsed, setHintUsed] = useState(false);
   const [winner, setWinner] = useState(null);
+  
+  // Refs for mid-match transitions
+  const challengeRef = useRef(null);
+  const screenRef = useRef('lobby');
+
+  const [aiState, setAiState] = useState({ name: 'AI Bot', progress: 0, status: 'Analyzing...', ready: true });
   const [solutionRevealed, setSolutionRevealed] = useState(false);
 
   const startTimeRef = useRef(0);
@@ -60,6 +66,8 @@ export function GameProvider({ children }) {
   const { sendMessage, lastMessage } = useWebSocket(socketUrl, {
     shouldReconnect: () => true,
   });
+
+
 
   const socket = {
     id: socketId,
@@ -131,6 +139,7 @@ export function GameProvider({ children }) {
 
   const enterStudyPhase = useCallback((ch) => {
     setChallenge(ch);
+    challengeRef.current = ch;
     setHintUsed(false);
     setGameActive(false);
     setCodeValue(ch.brokenCode);
@@ -141,6 +150,7 @@ export function GameProvider({ children }) {
     music.setMood('study');
     setMusicState(prev => ({ ...prev, mood: 'study' }));
     setScreen('study');
+    screenRef.current = 'study';
 
     const minTime = 8000;
     const step = 100;
@@ -186,7 +196,7 @@ export function GameProvider({ children }) {
     }, 800);
   }, [socket, players, roomCode, enterStudyPhase]);
 
-  const [aiState, setAiState] = useState({ name: 'AI Bot', progress: 0, status: 'Analyzing...', ready: true });
+
 
   const startAiOpponent = useCallback((ch) => {
     const profile = SPEED_PROFILES[speedSetting];
@@ -475,7 +485,21 @@ export function GameProvider({ children }) {
       if (msg.type === 'game_over') {
         handleGameOver(msg.winnerId);
       }
-  }, [lastMessage, roomCode, startCountdown, enterStudyPhase, socketId, startRacingPhase, handleGameOver, isAiMode]);
+      if (msg.type === 'player_left') {
+        if (msg.leaverId === socketIdRef.current) {
+          handleGameOver('opponent'); // We gave up
+        } else {
+          showToast('Opponent fled! An AI bot is taking over...', 'info');
+          setIsAiMode(true);
+          setRoomCode('AI_MATCH');
+          
+          // If we are already racing, we must start the AI immediately
+          if (screenRef.current === 'playing' && challengeRef.current) {
+            startAiOpponent(challengeRef.current);
+          }
+        }
+      }
+  }, [lastMessage, roomCode, startCountdown, enterStudyPhase, socketId, startRacingPhase, handleGameOver, isAiMode, showToast, startAiOpponent]);
 
   let currentPlayer = isAiMode ? { ready: true, progress: testResults?.filter(r=>r.ok)?.length || 0, status: 'Thinking...' } : players[socketId];
   let opponent = isAiMode ? null : Object.entries(players).find(([id]) => id !== socketId);

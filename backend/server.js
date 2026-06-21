@@ -136,12 +136,11 @@ wss.on('connection', (ws, req) => {
         room.players[socketId].status = 'Given Up';
         room.players[socketId].hasGivenUp = true;
         broadcastState();
-        
-        const winnerId = Object.keys(room.players).find(id => id !== socketId) || 'nobody';
+        // Broadcast that a player left/gave up instead of ending the game for everyone
         broadcast({ 
-          type: 'game_over', 
-          winnerId: winnerId,
-          winnerName: room.players[winnerId]?.name || 'Opponent'
+          type: 'player_left', 
+          leaverId: socketId,
+          leaverName: room.players[socketId]?.name || 'Opponent'
         });
       }
     }
@@ -164,6 +163,16 @@ wss.on('connection', (ws, req) => {
       if (remaining.length > 0 && !remaining.some(p => p.isHost)) {
         remaining[0].isHost = true;
       }
+      
+      // Notify remaining players so they can transition to AI match
+      if (room.gamePhase === 'playing' || room.gamePhase === 'study') {
+        broadcast({ 
+          type: 'player_left', 
+          leaverId: socketId,
+          leaverName: 'Opponent'
+        });
+      }
+      
       broadcastState();
       
       // Cleanup empty rooms
