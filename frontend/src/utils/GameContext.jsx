@@ -55,7 +55,7 @@ export function GameProvider({ children }) {
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000);
   }, []);
 
-  const socketUrl = isAiMode ? null : `ws://ringleted-unreposefully-lachlan.ngrok-free.dev/?room=${roomCode || 'lobby'}&name=${playerName}`;
+  const socketUrl = isAiMode ? null : `wss://coding-arena-ion2.onrender.com/?room=${roomCode || 'lobby'}&name=${playerName}`;
   const { sendMessage, lastMessage } = useWebSocket(socketUrl, {
     shouldReconnect: () => true,
   });
