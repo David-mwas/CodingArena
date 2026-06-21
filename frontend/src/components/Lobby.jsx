@@ -22,8 +22,16 @@ export default function Lobby() {
       exit={{ opacity: 0, scale: 1.05 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="text-center max-w-md mx-auto">
-        <h2 className="text-2xl font-bold mb-2">Waiting Room</h2>
+      <div className="text-center max-w-md mx-auto w-full">
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="text-2xl font-bold">Waiting Room</h2>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="text-xs text-coral hover:text-coral-dim font-bold tracking-widest uppercase transition-colors"
+          >
+            Leave Room
+          </button>
+        </div>
         <p className="text-muted text-sm mb-6">
           {Object.keys(players || {}).length} participant(s) in room. Share this code to invite more!
         </p>

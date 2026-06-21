@@ -118,7 +118,7 @@ export default function Results() {
             onClick={playAgain} 
             className="btn-glow px-8 py-3 bg-accent hover:bg-accent-dim text-bg font-bold rounded-xl text-sm transition-colors shadow-lg shadow-accent/20"
           >
-            <i className="fas fa-redo mr-2"></i> Play Again
+            <i className="fas fa-redo mr-2"></i> Rematch Opponent
           </motion.button>
           <motion.button 
             whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
