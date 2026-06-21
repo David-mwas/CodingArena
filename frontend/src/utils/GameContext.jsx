@@ -91,7 +91,6 @@ export function GameProvider({ children }) {
       if (msg.type === 'game_over') {
         handleGameOver(msg.winnerId);
       }
-    }
   }, [lastMessage, roomCode, startCountdown, enterStudyPhase, socketId]);
 
   const handleResetStats = useCallback(() => {
