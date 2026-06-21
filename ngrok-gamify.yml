@@ -1,0 +1,10 @@
+version: "3"
+agent:
+    authtoken: 3BP6IdroiQS8E6BjYgdxJDXTAus_74DqDARKr1V9YXpYFE9DG
+tunnels:
+    frontend:
+        addr: 5173
+        proto: http
+    backend:
+        addr: 1999
+        proto: http
