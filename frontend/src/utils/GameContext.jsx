@@ -445,8 +445,12 @@ export function GameProvider({ children }) {
     }
   }, [gameActive, isAiMode, socket, handleGameOver]);
 
+  const processedMessageRef = useRef(null);
+
   useEffect(() => {
-    if (!lastMessage) return;
+    if (!lastMessage || lastMessage === processedMessageRef.current) return;
+    processedMessageRef.current = lastMessage;
+    
     const e = { data: lastMessage.data };
       if (isAiMode) return;
       const msg = JSON.parse(e.data);
