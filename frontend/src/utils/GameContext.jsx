@@ -49,6 +49,7 @@ export function GameProvider({ children }) {
 
   const [aiState, setAiState] = useState({ name: 'AI Bot', progress: 0, status: 'Analyzing...', ready: true });
   const [solutionRevealed, setSolutionRevealed] = useState(false);
+  const [globalLeaderboard, setGlobalLeaderboard] = useState([]);
 
   const startTimeRef = useRef(0);
   const timerIntervalRef = useRef(null);
@@ -390,6 +391,17 @@ export function GameProvider({ children }) {
         if (!newStats.challengeBest[challenge.id] || finalElapsed < newStats.challengeBest[challenge.id].bestTime) {
           newStats.challengeBest[challenge.id] = { bestTime: finalElapsed };
         }
+        
+        // Record global leaderboard time if multiplayer match
+        if (!isAiMode && socket && socket.send) {
+          socket.send(JSON.stringify({
+            type: 'record_time',
+            time: Math.floor(finalElapsed / 1000),
+            name: playerName,
+            challengeId: challenge.id,
+            challengeTitle: challenge.title
+          }));
+        }
       }
     } else {
       newStats.totalLosses++;
@@ -484,6 +496,9 @@ export function GameProvider({ children }) {
       }
       if (msg.type === 'game_over') {
         handleGameOver(msg.winnerId);
+      }
+      if (msg.type === 'global_leaderboard') {
+        setGlobalLeaderboard(msg.data);
       }
       if (msg.type === 'player_left') {
         if (msg.leaverId === socketIdRef.current) {

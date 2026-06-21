@@ -57,6 +57,7 @@ export default function Game() {
       
       <div className="px-4 sm:px-6 py-3 bg-surface/50 border-b border-border/50 flex-shrink-0">
         <h2 className="font-bold text-lg">{challenge.title}</h2>
+        <p className="text-sm text-muted mt-1">{challenge.description}</p>
       </div>
       
       <div className="px-4 sm:px-6 py-4 bg-bg/50 flex-shrink-0">

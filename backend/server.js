@@ -16,6 +16,9 @@ const wss = new WebSocketServer({ server });
 // State grouped by roomCode
 const rooms = {};
 
+// In-memory global leaderboard
+const globalLeaderboard = [];
+
 wss.on('connection', (ws, req) => {
   // Parse roomCode and name from URL query params
   // Format: ws://localhost:1999/?room=lobby&name=Player1
@@ -50,6 +53,7 @@ wss.on('connection', (ws, req) => {
 
   // Send the assigned socketId to the client
   ws.send(JSON.stringify({ type: 'init', id: socketId }));
+  ws.send(JSON.stringify({ type: 'global_leaderboard', data: globalLeaderboard }));
 
   const broadcastState = () => {
     const stateMsg = JSON.stringify({
@@ -153,6 +157,33 @@ wss.on('connection', (ws, req) => {
         room.players[pid].hasGivenUp = false;
       }
       broadcastState();
+    }
+    
+    if (msg.type === 'get_leaderboard') {
+      ws.send(JSON.stringify({ type: 'global_leaderboard', data: globalLeaderboard }));
+    }
+    
+    if (msg.type === 'record_time') {
+      // msg requires: time (seconds), name, challengeId, challengeTitle
+      globalLeaderboard.push({
+        name: msg.name || 'Anonymous',
+        time: msg.time,
+        challengeId: msg.challengeId,
+        challengeTitle: msg.challengeTitle,
+        date: Date.now()
+      });
+      // Sort ascending by time and keep top 10
+      globalLeaderboard.sort((a, b) => a.time - b.time);
+      if (globalLeaderboard.length > 10) globalLeaderboard.pop();
+      
+      // Broadcast new leaderboard to everyone connected (if we had a global list of all WS, 
+      // but here we can just broadcast to this room, or we can iterate over wss.clients)
+      const lbMsg = JSON.stringify({ type: 'global_leaderboard', data: globalLeaderboard });
+      wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(lbMsg);
+        }
+      });
     }
   });
 
