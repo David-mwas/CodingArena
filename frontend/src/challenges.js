@@ -239,8 +239,8 @@ export const CHALLENGES = [
 export const OPPONENT_NAMES = ['DebugDemon', 'StackOverlord', 'BugSquasher', 'NullPointer', 'SegFault', 'BitFlipper', 'HotFix', 'CodeCrusher', 'RootAccess', 'KernelPanic'];
 
 export const SPEED_PROFILES = {
-  chill: { analyze: [4000, 7000], baseDelays: [18000, 26000, 34000, 42000], label: 'Chill' },
-  normal: { analyze: [2000, 4000], baseDelays: [12000, 19000, 26000, 33000], label: 'Normal' },
-  intense: { analyze: [1500, 3000], baseDelays: [7000, 12000, 17000, 22000], label: 'Intense' },
-  insane: { analyze: [800, 1500], baseDelays: [4000, 7000, 10000, 13000], label: 'Insane' }
+  chill: { analyze: [2000, 4000], baseDelays: [8000, 16000, 24000, 32000], label: 'Chill' },
+  normal: { analyze: [1000, 2000], baseDelays: [5000, 12000, 19000, 26000], label: 'Normal' },
+  intense: { analyze: [500, 1000], baseDelays: [3000, 8000, 13000, 18000], label: 'Intense' },
+  insane: { analyze: [0, 500], baseDelays: [1500, 4000, 7000, 10000], label: 'Insane' }
 };

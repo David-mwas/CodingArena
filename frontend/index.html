@@ -7,6 +7,14 @@
     <title>Code Arena — Multiplayer Debug Race</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script>
+      window.onerror = function(message, source, lineno, colno, error) {
+        console.error("GLOBAL_ERROR: " + message + " (at " + source + ":" + lineno + ":" + colno + ")", error);
+      };
+      window.onunhandledrejection = function(event) {
+        console.error("UNHANDLED_REJECTION: " + (event.reason ? event.reason.message || event.reason : event));
+      };
+    </script>
   </head>
   <body>
     <div id="root"></div>

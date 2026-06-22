@@ -7,17 +7,17 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: '#080c14',
-        surface: '#0f1923',
-        card: '#162032',
-        border: '#1e3048',
-        accent: '#00ff88',
-        'accent-dim': '#00cc6a',
-        coral: '#ff4757',
-        cyan: '#00d4ff',
-        orange: '#ff8c42',
-        muted: '#7a8ba0',
-        gold: '#fbbf24'
+        bg: 'var(--bg)',
+        surface: 'var(--surface)',
+        card: 'var(--card)',
+        border: 'var(--border-color)',
+        accent: 'var(--accent)',
+        'accent-dim': 'var(--accent-dim)',
+        coral: 'var(--coral)',
+        cyan: 'var(--cyan)',
+        orange: 'var(--orange)',
+        muted: 'var(--muted)',
+        gold: 'var(--gold)'
       },
       fontFamily: {
         mono: ['JetBrains Mono', 'monospace'],

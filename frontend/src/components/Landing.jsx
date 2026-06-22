@@ -53,7 +53,7 @@ export default function Landing() {
 
         {stats.totalGames > 0 && (
           <motion.div variants={itemVariants} className="mb-8 w-full">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-md mx-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto">
               <div className="stat-card rounded-xl p-3 text-center">
                 <div className="text-2xl font-bold text-accent">{stats.totalWins}</div>
                 <div className="text-[10px] text-muted uppercase tracking-wider">Wins</div>
@@ -72,46 +72,55 @@ export default function Landing() {
               </div>
             </div>
 
-            <div className="mt-6 max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
-              <div className="bg-surface border border-border rounded-xl p-4">
-                <h3 className="text-xs font-bold text-muted uppercase tracking-widest mb-3 border-b border-border/50 pb-2"><i className="fas fa-medal text-gold mr-2"></i>Personal Best</h3>
-                {Object.keys(stats.challengeBest || {}).length === 0 ? (
-                  <p className="text-xs text-muted/50 italic">Win races to record your best times!</p>
-                ) : (
-                  <ul className="space-y-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
-                    {Object.entries(stats.challengeBest).sort((a,b)=>a[1].bestTime - b[1].bestTime).map(([cid, data]) => {
-                       const c = CHALLENGES.find(ch => ch.id == cid);
-                       if (!c) return null;
-                       return (
-                         <li key={cid} className="flex justify-between items-center text-xs bg-bg/50 px-3 py-2 rounded-lg border border-border/30">
-                           <span className="text-white truncate pr-2"><span className="text-muted mr-1">#{cid}</span>{c.title}</span>
-                           <span className="font-mono text-accent whitespace-nowrap">{formatTime(data.bestTime)}</span>
-                         </li>
-                       )
-                    })}
-                  </ul>
-                )}
+            <div className="mt-6 max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+              <div className="bg-surface border border-border rounded-xl p-5 shadow-lg relative overflow-hidden group flex flex-col min-h-[160px]">
+                <div className="absolute -right-6 -top-6 w-32 h-32 bg-accent/5 rounded-full blur-2xl group-hover:bg-accent/10 transition-colors"></div>
+                <h3 className="text-xs font-bold text-muted tracking-widest uppercase mb-4 flex items-center gap-2">
+                  <i className="fas fa-trophy text-gold"></i> Personal Best
+                </h3>
+                <div className="flex-1 flex flex-col justify-center">
+                  {stats.challengeBest && Object.keys(stats.challengeBest || {}).length > 0 ? (
+                    <ul className="space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
+                      {Object.entries(stats.challengeBest).sort((a,b)=>a[1].bestTime - b[1].bestTime).map(([cid, data]) => {
+                         const c = CHALLENGES.find(ch => ch.id == cid);
+                         if (!c) return null;
+                         return (
+                           <li key={cid} className="flex justify-between items-center text-xs bg-bg/50 px-3 py-2 rounded-lg border border-border/30">
+                             <span className="text-white truncate pr-2"><span className="text-muted mr-1">#{cid}</span>{c.title}</span>
+                             <span className="font-mono text-accent whitespace-nowrap">{formatTime(data.bestTime)}</span>
+                           </li>
+                         )
+                      })}
+                    </ul>
+                  ) : (
+                    <p className="text-xs text-muted/50 italic text-center">Win races to record your best times!</p>
+                  )}
+                </div>
               </div>
               
-              <div className="bg-surface border border-border rounded-xl p-4 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-accent/5 rounded-bl-[100px] pointer-events-none"></div>
-                <h3 className="text-xs font-bold text-muted uppercase tracking-widest mb-3 border-b border-border/50 pb-2"><i className="fas fa-globe text-cyan mr-2"></i>Global Top 10</h3>
-                {!globalLeaderboard || globalLeaderboard.length === 0 ? (
-                  <p className="text-xs text-muted/50 italic">Waiting for servers to register records...</p>
-                ) : (
-                  <ul className="space-y-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
-                    {globalLeaderboard.map((record, idx) => (
-                      <li key={idx} className="flex justify-between items-center text-xs bg-bg/50 px-3 py-2 rounded-lg border border-border/30">
-                        <span className="text-white truncate pr-2 flex items-center gap-2">
-                          <span className={`font-mono text-[10px] w-4 text-center ${idx===0?'text-gold':idx===1?'text-silver':idx===2?'text-bronze':'text-muted'}`}>{idx+1}.</span>
-                          <span className="font-bold text-accent">{record.name}</span>
-                          <span className="text-muted/70 truncate hidden sm:inline-block">({record.challengeTitle})</span>
-                        </span>
-                        <span className="font-mono text-cyan whitespace-nowrap">{formatTime(record.time * 1000)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+              <div className="bg-surface border border-border rounded-xl p-5 shadow-lg relative overflow-hidden group flex flex-col min-h-[160px]">
+                <div className="absolute -right-6 -top-6 w-32 h-32 bg-cyan/5 rounded-full blur-2xl group-hover:bg-cyan/10 transition-colors"></div>
+                <h3 className="text-xs font-bold text-muted tracking-widest uppercase mb-4 flex items-center gap-2">
+                  <i className="fas fa-globe text-cyan"></i> Global Top 10
+                </h3>
+                <div className="flex-1 flex flex-col justify-center">
+                  {!globalLeaderboard || globalLeaderboard.length === 0 ? (
+                    <p className="text-xs text-muted/50 italic text-center">Waiting for servers to register records...</p>
+                  ) : (
+                    <ul className="space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
+                      {globalLeaderboard.map((record, idx) => (
+                        <li key={idx} className="flex justify-between items-center text-xs bg-bg/50 px-3 py-2 rounded-lg border border-border/30">
+                          <span className="text-white truncate pr-2 flex items-center gap-2">
+                            <span className={`font-mono text-[10px] w-4 text-center ${idx===0?'text-gold':idx===1?'text-silver':idx===2?'text-bronze':'text-muted'}`}>{idx+1}.</span>
+                            <span className="font-bold text-accent">{record.name}</span>
+                            <span className="text-muted/70 truncate hidden sm:inline-block">({record.challengeTitle})</span>
+                          </span>
+                          <span className="font-mono text-cyan whitespace-nowrap">{formatTime(record.time * 1000)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
             </div>
           </motion.div>

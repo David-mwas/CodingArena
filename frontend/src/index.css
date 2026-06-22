@@ -3,13 +3,58 @@
 @tailwind utilities;
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-:root { --accent: #00ff88; --coral: #ff4757; --cyan: #00d4ff; --orange: #ff8c42; }
+:root {
+  --bg: #080c14;
+  --surface: #0f1923;
+  --card: #162032;
+  --border-color: #1e3048;
+  --accent: #00ff88;
+  --accent-dim: #00cc6a;
+  --coral: #ff4757;
+  --cyan: #00d4ff;
+  --orange: #ff8c42;
+  --muted: #7a8ba0;
+  --gold: #fbbf24;
+  --text-main: #e4e8ef;
+}
+.light-theme {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --card: #f1f5f9;
+  --border-color: #cbd5e1;
+  --accent: #059669;
+  --accent-dim: #047857;
+  --coral: #ef4444;
+  --cyan: #0284c7;
+  --orange: #ea580c;
+  --muted: #64748b;
+  --gold: #d97706;
+  --text-main: #0f172a;
+}
+.light-theme .text-white {
+  color: var(--text-main) !important;
+}
+.light-theme .token {
+  filter: invert(1) hue-rotate(180deg) brightness(0.7);
+}
+.light-theme .editor-wrap {
+  background: #ffffff;
+}
+.light-theme .line-numbers {
+  background: #f8fafc;
+  color: var(--muted);
+  border-right-color: var(--border-color);
+}
+.light-theme .code-editor {
+  color: var(--text-main);
+}
 body {
-  background: #080c14;
-  color: #e4e8ef;
+  background: var(--bg);
+  color: var(--text-main);
   font-family: 'Space Grotesk', sans-serif;
   overflow-x: hidden;
   min-height: 100vh;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .scanlines {
@@ -111,15 +156,15 @@ body {
 }
 .code-editor::selection { background: rgba(0,255,136,0.15); }
 .code-editor::-webkit-scrollbar { width: 8px; height: 8px; }
-.code-editor::-webkit-scrollbar-track { background: #0a1018; }
-.code-editor::-webkit-scrollbar-thumb { background: #1e3048; border-radius: 4px; }
+.code-editor::-webkit-scrollbar-track { background: var(--bg); }
+.code-editor::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
 
 .race-track {
   height: 8px;
-  background: #0f1923;
+  background: var(--surface);
   border-radius: 4px;
   overflow: hidden;
-  border: 1px solid #1a2a3a;
+  border: 1px solid var(--border-color);
 }
 .race-fill {
   height: 100%;
@@ -198,9 +243,9 @@ body {
   white-space: pre;
 }
 
-.badge-easy { background: rgba(0,255,136,0.12); color: #00ff88; border: 1px solid rgba(0,255,136,0.25); }
-.badge-medium { background: rgba(255,140,66,0.12); color: #ff8c42; border: 1px solid rgba(255,140,66,0.25); }
-.badge-hard { background: rgba(255,71,87,0.12); color: #ff4757; border: 1px solid rgba(255,71,87,0.25); }
+.badge-easy { background: rgba(0,255,136,0.12); color: var(--accent); border: 1px solid rgba(0,255,136,0.25); }
+.badge-medium { background: rgba(255,140,66,0.12); color: var(--orange); border: 1px solid rgba(255,140,66,0.25); }
+.badge-hard { background: rgba(255,71,87,0.12); color: var(--coral); border: 1px solid rgba(255,71,87,0.25); }
 
 .speed-card { cursor: pointer; transition: all 0.2s; }
 .speed-card:hover { transform: translateY(-2px); }
@@ -214,16 +259,16 @@ body {
   line-height: 1.6;
   white-space: pre;
 }
-.diff-remove { background: rgba(255,71,87,0.1); color: #ff6b7a; text-decoration: line-through; }
-.diff-add { background: rgba(0,255,136,0.1); color: #00ff88; }
-.diff-same { color: #3a4a5e; }
+.diff-remove { background: rgba(255,71,87,0.1); color: var(--coral); text-decoration: line-through; }
+.diff-add { background: rgba(0,255,136,0.1); color: var(--accent); }
+.diff-same { color: var(--muted); }
 
 .music-widget {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   transition: all 0.3s;
 }
-.music-widget:hover { background: rgba(15,25,35,0.95) !important; }
+.music-widget:hover { background: var(--card) !important; }
 
 .music-bar {
   width: 3px;
@@ -238,7 +283,7 @@ body {
   width: 60px;
   height: 4px;
   border-radius: 2px;
-  background: #1e3048;
+  background: var(--border-color);
   outline: none;
 }
 .volume-slider::-webkit-slider-thumb {
@@ -264,7 +309,7 @@ body {
   line-height: 1.8;
   white-space: pre;
   tab-size: 2;
-  color: #e4e8ef;
+  color: var(--text-main);
 }
 .study-progress-ring { transition: stroke-dashoffset 0.3s ease; }
 .mood-indicator {
@@ -275,7 +320,10 @@ body {
 }
 .stat-card {
   background: linear-gradient(135deg, rgba(15,25,35,0.8), rgba(22,32,50,0.6));
-  border: 1px solid #1e3048;
+  border: 1px solid var(--border-color);
+}
+.light-theme .stat-card {
+  background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(248,250,252,0.8));
 }
 
 @media(max-width: 768px) {

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { GameProvider, useGame } from './utils/GameContext';
 import Landing from './components/Landing';
 import Lobby from './components/Lobby';
@@ -9,7 +10,7 @@ import MusicWidget from './components/MusicWidget';
 import { AnimatePresence } from 'framer-motion';
 
 function GameScreenManager() {
-  const { screen, countdown } = useGame();
+  const { screen, countdown, isLight, setIsLight } = useGame();
 
   return (
     <>
@@ -17,6 +18,14 @@ function GameScreenManager() {
       <canvas id="victoryCanvas"></canvas>
       <MusicWidget />
       <ToastContainer />
+      
+      <button 
+        onClick={() => setIsLight(prev => !prev)}
+        className="fixed top-4 right-4 z-50 w-10 h-10 rounded-full bg-surface border border-border flex items-center justify-center text-muted hover:text-accent transition-colors shadow-lg"
+        title="Toggle Theme"
+      >
+        <i className={`fas ${isLight ? 'fa-moon' : 'fa-sun'}`}></i>
+      </button>
 
       <AnimatePresence mode="wait">
         {countdown && (

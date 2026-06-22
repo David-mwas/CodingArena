@@ -8,7 +8,7 @@ export default function Game() {
     roomCode, challenge, elapsedTime, 
     currentPlayer, opponentData, playerName, players,
     codeValue, setCodeValue, runTests, useHint, resetCode, hintUsed,
-    testResults, runError, handleGiveUp
+    testResults, runError, handleGiveUp, isLight
   } = useGame();
 
   const handleEditorWillMount = (monaco) => {
@@ -22,6 +22,7 @@ export default function Game() {
         'editorLineNumber.foreground': '#4f5b70'
       }
     });
+    // the default 'vs' theme is fine for light mode
   };
 
   if (!challenge) return null;
@@ -104,7 +105,7 @@ export default function Game() {
             <Editor
               height="100%"
               defaultLanguage="javascript"
-              theme="gamify-dark"
+              theme={isLight ? 'vs' : 'gamify-dark'}
               beforeMount={handleEditorWillMount}
               loading={<div className="text-muted text-sm flex items-center justify-center h-full gap-2"><div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin"></div> Loading Code Engine...</div>}
               value={codeValue}

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import Editor from '@monaco-editor/react';
 
 export default function Study() {
-  const { challenge, studyTimeRemaining, studyProgress, studyCanStart, triggerStartRace, isHost } = useGame();
+  const { challenge, studyTimeRemaining, studyProgress, studyCanStart, triggerStartRace, isHost, isLight } = useGame();
 
   if (!challenge) return null;
 
@@ -52,7 +52,7 @@ export default function Study() {
               <Editor
                 height="100%"
                 language="javascript"
-                theme="vs-dark"
+                theme={isLight ? "vs" : "vs-dark"}
                 value={challenge.brokenCode}
                 options={{
                   readOnly: true,

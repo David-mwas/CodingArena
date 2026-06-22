@@ -57,6 +57,22 @@ export function GameProvider({ children }) {
   const opponentTimersRef = useRef([]);
   const socketIdRef = useRef(null);
 
+  const [isLight, setIsLight] = useState(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved) return saved === 'light';
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+  });
+
+  useEffect(() => {
+    if (isLight) {
+      document.body.classList.add('light-theme');
+      localStorage.setItem('theme', 'light');
+    } else {
+      document.body.classList.remove('light-theme');
+      localStorage.setItem('theme', 'dark');
+    }
+  }, [isLight]);
+
   const showToast = useCallback((msg, type = 'info') => {
     const id = Date.now() + Math.random();
     setToasts(prev => [...prev, { id, msg, type }]);
@@ -202,12 +218,9 @@ export function GameProvider({ children }) {
   const startAiOpponent = useCallback((ch) => {
     const profile = SPEED_PROFILES[speedSetting];
     const diffMult = ch.difficulty === 'Easy' ? 0.85 : ch.difficulty === 'Medium' ? 1.15 : 1.5;
-    setAiState(prev => ({ ...prev, progress: 0, status: 'Analyzing...' }));
-
-    const t1 = setTimeout(() => {
-      setAiState(prev => ({ ...prev, status: 'Typing...' }));
-    }, profile.analyze[0] + Math.random() * (profile.analyze[1] - profile.analyze[0]));
-    opponentTimersRef.current.push(t1);
+    
+    // Start typing immediately to feel responsive
+    setAiState(prev => ({ ...prev, progress: 0, status: 'Typing...' }));
 
     const totalTests = ch.testCases.length;
     for (let i = 0; i < totalTests; i++) {
@@ -248,6 +261,7 @@ export function GameProvider({ children }) {
     setTestResults(null);
     setRunError(null);
     setScreen('game');
+    screenRef.current = 'game';
     
     startTimeRef.current = Date.now();
     setElapsedTime(0);
@@ -509,7 +523,7 @@ export function GameProvider({ children }) {
           setRoomCode('AI_MATCH');
           
           // If we are already racing, we must start the AI immediately
-          if (screenRef.current === 'playing' && challengeRef.current) {
+          if (screenRef.current === 'game' && challengeRef.current) {
             startAiOpponent(challengeRef.current);
           }
         }
@@ -535,7 +549,8 @@ export function GameProvider({ children }) {
     codeValue, setCodeValue, testResults, runError, hintUsed,
     winner, solutionRevealed, setSolutionRevealed,
     handleCreateRoom, handleJoinRoom, copyRoomCode, toggleReady,
-    triggerStartRace, runTests, useHint, resetCode, playAgain, goHome, handleGiveUp
+    triggerStartRace, runTests, useHint, resetCode, playAgain, goHome, handleGiveUp,
+    isLight, setIsLight
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
