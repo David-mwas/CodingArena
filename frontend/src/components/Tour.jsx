@@ -14,9 +14,9 @@ const Tour = () => {
   }, []);
 
   const handleJoyrideCallback = (data) => {
-    const { status } = data;
+    const { status, action } = data;
     const finishedStatuses = [STATUS.FINISHED, STATUS.SKIPPED];
-    if (finishedStatuses.includes(status)) {
+    if (finishedStatuses.includes(status) || action === 'close' || action === 'skip') {
       setRun(false);
       localStorage.setItem('hasSeenTour', 'true');
     }
