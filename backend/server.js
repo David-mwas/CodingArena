@@ -161,12 +161,13 @@ wss.on('connection', (ws, req) => {
         room.gamePhase = 'finished';
         room.players[socketId].status = 'Given Up';
         room.players[socketId].hasGivenUp = true;
+        const activeCount = Object.values(room.players).filter(p => !p.hasGivenUp).length;
         broadcastState();
-        // Broadcast that a player left/gave up instead of ending the game for everyone
         broadcast({ 
           type: 'player_left', 
           leaverId: socketId,
-          leaverName: room.players[socketId]?.name || 'Opponent'
+          leaverName: room.players[socketId]?.name || 'Opponent',
+          remainingPlayers: activeCount
         });
       }
     }
@@ -182,12 +183,23 @@ wss.on('connection', (ws, req) => {
     }
     
     if (msg.type === 'chat') {
-      broadcast({ 
+      console.log('Broadcasting chat from', socketId, ':', msg.text, 'in room', roomCode);
+      const chatMsg = { 
         type: 'chat', 
         senderId: socketId, 
         senderName: room.players[socketId]?.name || 'Opponent', 
         text: msg.text 
+      };
+      
+      const msgStr = JSON.stringify(chatMsg);
+      let count = 0;
+      wss.clients.forEach(client => {
+        if (client.roomCode === roomCode && client.readyState === 1) {
+          client.send(msgStr);
+          count++;
+        }
       });
+      console.log('Broadcasted to', count, 'clients');
     }
     
     if (msg.type === 'get_leaderboard') {
@@ -232,7 +244,8 @@ wss.on('connection', (ws, req) => {
         broadcast({ 
           type: 'player_left', 
           leaverId: socketId,
-          leaverName: 'Opponent'
+          leaverName: 'Opponent',
+          remainingPlayers: remaining.filter(p => !p.hasGivenUp).length
         });
       }
       

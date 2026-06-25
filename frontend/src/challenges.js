@@ -604,6 +604,206 @@ export const CHALLENGES = [
     testCases: [ { regex: /foreach\s*\(\s*\$data\s+as\s+\$key\s*=>\s*\$value\s*\)/, display: 'Uses as keyword' } ],
     hint: 'The syntax is foreach ($array as $key => $value).'
   }
+,
+  {
+    id: 130, title: "React Context Provider", difficulty: "Medium", topic: "react", evalMethod: "regex",
+    description: "Wrap your app with ThemeContext Provider.",
+    brokenCode: `function App() {
+  return <ThemeContext value="dark"><Main /></ThemeContext>;
+}`,
+    fixedCode: `function App() {
+  return <ThemeContext.Provider value="dark"><Main /></ThemeContext.Provider>;
+}`,
+    testCases: [ { regex: /<ThemeContext\.Provider/, display: 'Uses Provider property' } ],
+    hint: 'Contexts require the .Provider component to pass values down.'
+  },
+  {
+    id: 131, title: "React UseRef Hook", difficulty: "Medium", topic: "react", evalMethod: "regex",
+    description: "Initialize a ref to null and attach it to the input.",
+    brokenCode: `const inputRef = useRef();
+<input ref={inputRef.current} />`,
+    fixedCode: `const inputRef = useRef(null);
+<input ref={inputRef} />`,
+    testCases: [ { regex: /ref=\{inputRef\}/, display: 'Passes the ref object directly' } ],
+    hint: 'Pass the ref object itself, not its .current property, to the ref prop.'
+  },
+  {
+    id: 132, title: "CSS Absolute Centering", difficulty: "Hard", topic: "css", evalMethod: "regex",
+    description: "Center an absolute element using top, left, and transform.",
+    brokenCode: `.modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(0, 0);
+}`,
+    fixedCode: `.modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}`,
+    testCases: [ { regex: /translate\(-50%,\s*-50%\)/, display: 'Uses correct translate values' } ],
+    hint: 'Translate needs negative 50% to pull the element back by half its own width and height.'
+  },
+  {
+    id: 133, title: "CSS Hover State", difficulty: "Easy", topic: "css", evalMethod: "regex",
+    description: "Change the button background on hover.",
+    brokenCode: `button::hover {
+  background: blue;
+}`,
+    fixedCode: `button:hover {
+  background: blue;
+}`,
+    testCases: [ { regex: /button:hover/, display: 'Uses single colon for pseudo-class' } ],
+    hint: 'Pseudo-classes like hover use a single colon, pseudo-elements use double.'
+  },
+  {
+    id: 134, title: "Python Try Except", difficulty: "Medium", topic: "python", evalMethod: "regex",
+    description: "Catch a ValueError and print an error message.",
+    brokenCode: `try:
+    int("abc")
+catch ValueError:
+    print("Error")`,
+    fixedCode: `try:
+    int("abc")
+except ValueError:
+    print("Error")`,
+    testCases: [ { regex: /except\s+ValueError:/, display: 'Uses except keyword' } ],
+    hint: 'Python uses except instead of catch for exception handling.'
+  },
+  {
+    id: 135, title: "Python Class Init", difficulty: "Medium", topic: "python", evalMethod: "regex",
+    description: "Define the constructor method for the class.",
+    brokenCode: `class User:
+    def init(self, name):
+        self.name = name`,
+    fixedCode: `class User:
+    def __init__(self, name):
+        self.name = name`,
+    testCases: [ { regex: /def\s+__init__\s*\(/, display: 'Uses dunder init' } ],
+    hint: 'Constructor methods in Python require double underscores on both sides.'
+  },
+  {
+    id: 136, title: "SQL Join Clause", difficulty: "Medium", topic: "sql", evalMethod: "regex",
+    description: "Perform an INNER JOIN on users and orders.",
+    brokenCode: `SELECT * FROM users
+INNER orders ON users.id = orders.user_id`,
+    fixedCode: `SELECT * FROM users
+INNER JOIN orders ON users.id = orders.user_id`,
+    testCases: [ { regex: /INNER\s+JOIN\s+orders/, display: 'Includes JOIN keyword' } ],
+    hint: 'You must specify JOIN after INNER.'
+  },
+  {
+    id: 137, title: "SQL Group By", difficulty: "Medium", topic: "sql", evalMethod: "regex",
+    description: "Count orders per user ID.",
+    brokenCode: `SELECT user_id, COUNT(*) FROM orders
+ORDER BY user_id`,
+    fixedCode: `SELECT user_id, COUNT(*) FROM orders
+GROUP BY user_id`,
+    testCases: [ { regex: /GROUP\s+BY\s+user_id/, display: 'Uses GROUP BY for aggregation' } ],
+    hint: 'When using aggregate functions like COUNT, you must use GROUP BY.'
+  },
+  {
+    id: 138, title: "Node Express Route", difficulty: "Medium", topic: "node", evalMethod: "regex",
+    description: "Define a GET route for /api/data.",
+    brokenCode: `app.route('/api/data', (req, res) => {
+  res.send('ok');
+});`,
+    fixedCode: `app.get('/api/data', (req, res) => {
+  res.send('ok');
+});`,
+    testCases: [ { regex: /app\.get\s*\('/, display: 'Uses HTTP method explicitly' } ],
+    hint: 'Specify the HTTP method like app.get or app.post.'
+  },
+  {
+    id: 139, title: "Node Event Emitter", difficulty: "Hard", topic: "node", evalMethod: "regex",
+    description: "Emit a 'ready' event with a payload.",
+    brokenCode: `emitter.trigger('ready', { status: 1 });`,
+    fixedCode: `emitter.emit('ready', { status: 1 });`,
+    testCases: [ { regex: /emitter\.emit\s*\(/, display: 'Uses emit function' } ],
+    hint: 'Node.js EventEmitters use the emit() method to fire events.'
+  },
+  {
+    id: 140, title: "Vue Reactive State", difficulty: "Medium", topic: "vue", evalMethod: "regex",
+    description: "Create reactive state using Composition API.",
+    brokenCode: `const count = reactive(0);`,
+    fixedCode: `const count = ref(0);`,
+    testCases: [ { regex: /ref\(0\)/, display: 'Uses ref for primitives' } ],
+    hint: 'reactive() only works for objects, use ref() for primitive values like numbers.'
+  },
+  {
+    id: 141, title: "Vue Computed Property", difficulty: "Medium", topic: "vue", evalMethod: "regex",
+    description: "Create a computed property for double count.",
+    brokenCode: `const double = computed(count.value * 2);`,
+    fixedCode: `const double = computed(() => count.value * 2);`,
+    testCases: [ { regex: /computed\(\s*\(\)\s*=>/, display: 'Passes a getter function' } ],
+    hint: 'computed() takes a getter function, not a direct value.'
+  },
+  {
+    id: 142, title: "Docker Workdir", difficulty: "Easy", topic: "docker", evalMethod: "regex",
+    description: "Set the working directory to /app.",
+    brokenCode: `DIRECTORY /app`,
+    fixedCode: `WORKDIR /app`,
+    testCases: [ { regex: /WORKDIR\s+\/app/, display: 'Uses correct Dockerfile instruction' } ],
+    hint: 'The instruction to set the working directory is WORKDIR.'
+  },
+  {
+    id: 143, title: "Docker Run Command", difficulty: "Medium", topic: "docker", evalMethod: "regex",
+    description: "Specify the default command to run node server.js",
+    brokenCode: `START ["node", "server.js"]`,
+    fixedCode: `CMD ["node", "server.js"]`,
+    testCases: [ { regex: /CMD\s+\[/, display: 'Uses CMD instruction' } ],
+    hint: 'Use CMD (or ENTRYPOINT) to define the default execution command.'
+  },
+  {
+    id: 144, title: "Git Merge Branch", difficulty: "Medium", topic: "git", evalMethod: "regex",
+    description: "Merge the 'feature' branch into the current branch.",
+    brokenCode: `git combine feature`,
+    fixedCode: `git merge feature`,
+    testCases: [ { regex: /git\s+merge\s+feature/, display: 'Uses correct merge command' } ],
+    hint: 'The command to integrate changes from another branch is merge.'
+  },
+  {
+    id: 145, title: "Git Add All", difficulty: "Easy", topic: "git", evalMethod: "regex",
+    description: "Stage all modified files for commit.",
+    brokenCode: `git stage all`,
+    fixedCode: `git add .`,
+    testCases: [ { regex: /git\s+add\s+\./, display: 'Uses add command with dot' } ],
+    hint: 'Use git add with a dot (.) to stage all changes in the current directory.'
+  },
+  {
+    id: 146, title: "HTML Video Tag", difficulty: "Medium", topic: "html", evalMethod: "regex",
+    description: "Embed a video and show playback controls.",
+    brokenCode: `<video src="vid.mp4" playbar></video>`,
+    fixedCode: `<video src="vid.mp4" controls></video>`,
+    testCases: [ { regex: /controls/, display: 'Uses the controls attribute' } ],
+    hint: 'The attribute to show play/pause controls is simply "controls".'
+  },
+  {
+    id: 147, title: "HTML Form Submit", difficulty: "Easy", topic: "html", evalMethod: "regex",
+    description: "Create a button that submits the form.",
+    brokenCode: `<button type="send">Submit</button>`,
+    fixedCode: `<button type="submit">Submit</button>`,
+    testCases: [ { regex: /type="submit"/, display: 'Uses type submit' } ],
+    hint: 'The type must be exactly "submit" to trigger a form submission.'
+  },
+  {
+    id: 148, title: "Java Static Method", difficulty: "Medium", topic: "java", evalMethod: "regex",
+    description: "Define a static method that returns an integer.",
+    brokenCode: `public void static int getNumber() { return 5; }`,
+    fixedCode: `public static int getNumber() { return 5; }`,
+    testCases: [ { regex: /public\s+static\s+int/, display: 'Correct modifiers order' } ],
+    hint: 'Do not include "void" if the method has a return type (int).'
+  },
+  {
+    id: 149, title: "PHP Array Length", difficulty: "Medium", topic: "php", evalMethod: "regex",
+    description: "Get the number of items in the $users array.",
+    brokenCode: `$len = $users->length;`,
+    fixedCode: `$len = count($users);`,
+    testCases: [ { regex: /count\(\$users\)/, display: 'Uses count() function' } ],
+    hint: 'In PHP, use the count() function to get the length of an array.'
+  }
+
 ];
 
 export const OPPONENT_NAMES = ['DebugDemon', 'StackOverlord', 'BugSquasher', 'NullPointer', 'SegFault', 'BitFlipper', 'HotFix', 'CodeCrusher', 'RootAccess', 'KernelPanic'];

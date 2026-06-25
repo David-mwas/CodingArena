@@ -1,12 +1,31 @@
-npm warn exec The following package was not found and will be installed: serve@14.2.6
- INFO  Accepting connections at http://localhost:5000
- HTTP  6/21/2026 11:10:17 PM 127.0.0.1 GET /
- HTTP  6/21/2026 11:10:17 PM 127.0.0.1 Returned 200 in 31 ms
- HTTP  6/21/2026 11:10:18 PM 127.0.0.1 GET /assets/index-DAofR8xg.css
- HTTP  6/21/2026 11:10:18 PM 127.0.0.1 GET /assets/index-C_WzyGk8.js
- HTTP  6/21/2026 11:10:18 PM 127.0.0.1 Returned 200 in 8 ms
- HTTP  6/21/2026 11:10:18 PM 127.0.0.1 Returned 200 in 12 ms
- HTTP  6/21/2026 11:10:20 PM 127.0.0.1 GET /vite.svg
- HTTP  6/21/2026 11:10:20 PM 127.0.0.1 Returned 200 in 2 ms
 
- INFO  Gracefully shutting down. Please wait...
+> gamify-backend@1.0.0 start
+> node server.js
+
+Backend running on https://localhost:1999
+Broadcasting chat from 11538086-449c-48ea-885f-a3eac8a63636 : 🔥 in room X75DCK
+Broadcasted to 2 clients
+Broadcasting chat from 11538086-449c-48ea-885f-a3eac8a63636 : 😅 in room X75DCK
+Broadcasted to 2 clients
+Broadcasting chat from c0f5be09-5cb2-48c3-94f7-f92119c4f877 : kill in room X75DCK
+Broadcasted to 2 clients
+Broadcasting chat from c0f5be09-5cb2-48c3-94f7-f92119c4f877 : huhui in room X75DCK
+Broadcasted to 2 clients
+Broadcasting chat from 11538086-449c-48ea-885f-a3eac8a63636 : 🔥 in room X75DCK
+Broadcasted to 2 clients
+Broadcasting chat from 11538086-449c-48ea-885f-a3eac8a63636 : 🔥 in room X75DCK
+Broadcasted to 2 clients
+Broadcasting chat from 11538086-449c-48ea-885f-a3eac8a63636 : 🔥 in room X75DCK
+Broadcasted to 2 clients
+Broadcasting chat from 11538086-449c-48ea-885f-a3eac8a63636 : 🔥 in room X75DCK
+Broadcasted to 2 clients
+Broadcasting chat from c0f5be09-5cb2-48c3-94f7-f92119c4f877 : 😅 in room X75DCK
+Broadcasted to 2 clients
+Broadcasting chat from c0f5be09-5cb2-48c3-94f7-f92119c4f877 : 😅 in room X75DCK
+Broadcasted to 2 clients
+Broadcasting chat from c0f5be09-5cb2-48c3-94f7-f92119c4f877 : 😅 in room X75DCK
+Broadcasted to 2 clients
+Broadcasting chat from c0f5be09-5cb2-48c3-94f7-f92119c4f877 : 😅 in room X75DCK
+Broadcasted to 2 clients
+Broadcasting chat from c0f5be09-5cb2-48c3-94f7-f92119c4f877 : 😅 in room X75DCK
+Broadcasted to 2 clients

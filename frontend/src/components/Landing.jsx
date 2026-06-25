@@ -9,7 +9,8 @@ export default function Landing() {
   const { 
     stats, speedSetting, setSpeedSetting, topic, setTopic,
     roomInput, setRoomInput, handleJoinRoom, handleCreateRoom, 
-    handleResetStats, globalLeaderboard
+    handleResetStats, globalLeaderboard,
+    playerName, setPlayerName
   } = useGame();
 
   useEffect(() => {
@@ -113,6 +114,26 @@ export default function Landing() {
               <span className="text-orange">{`{`}</span>
             </div>
             
+            <div className="flex justify-between items-center px-4 sm:px-8 mb-4 flex-wrap gap-4">
+              <div className="flex flex-col w-full sm:w-auto mb-2 sm:mb-0">
+                <span className="text-text-main opacity-70 mb-1">name:</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-green-400 text-xl sm:text-2xl font-bold leading-none">"</span>
+                  <input 
+                    type="text" 
+                    value={playerName}
+                    onChange={(e) => setPlayerName(e.target.value)}
+                    maxLength={15}
+                    className="bg-transparent border-none outline-none text-green-400 text-xl sm:text-2xl font-bold p-0 w-28 sm:w-36 leading-none custom-input-placeholder"
+                    spellCheck="false"
+                  />
+                  <span className="text-green-400 text-xl sm:text-2xl font-bold leading-none">"</span>
+                  <span className="text-muted mb-0.5">,</span>
+                  <i className="fas fa-pen ml-2 text-muted/40 text-[10px]"></i>
+                </div>
+              </div>
+            </div>
+
             {stats.totalGames > 0 ? (
               <div className="flex justify-between items-center px-4 sm:px-8 mb-4 flex-wrap gap-4">
                 <div className="flex flex-col">

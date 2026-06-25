@@ -22,6 +22,8 @@ export function GameProvider({ children }) {
   // Multiplayer
   const [roomCode, setRoomCode] = useState(null);
   const [isAiMode, setIsAiMode] = useState(false);
+  const isAiModeRef = useRef(false);
+  useEffect(() => { isAiModeRef.current = isAiMode; }, [isAiMode]);
   const [speedSetting, setSpeedSetting] = useState('normal');
   const [topic, setTopic] = useState('javascript');
   const [playerName, setPlayerName] = useState(() => {
@@ -46,6 +48,13 @@ export function GameProvider({ children }) {
       return 'user_temp';
     }
   });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('codeArenaPlayerName', playerName);
+    } catch (e) {}
+  }, [playerName]);
+
   const [players, setPlayers] = useState({});
   const [isHost, setIsHost] = useState(false);
   const [socketId, setSocketId] = useState(null);
@@ -263,13 +272,16 @@ export function GameProvider({ children }) {
     // Start typing immediately to feel responsive
     setAiState(prev => ({ ...prev, progress: 0, status: 'Typing...' }));
 
+    // Offset time if AI is joining mid-match
+    const timeOffset = gameActiveRef.current ? Date.now() - startTimeRef.current : 0;
+
     const events = [];
     const totalTests = ch.testCases.length;
     for (let i = 0; i < totalTests; i++) {
       const base = profile.baseDelays[Math.min(i, profile.baseDelays.length - 1)];
       const delay = base * (0.75 + Math.random() * 0.5) * diffMult;
       events.push({
-        time: delay,
+        time: timeOffset + delay,
         action: 'progress',
         progress: i + 1,
         status: i + 1 < totalTests ? `${i + 1}/${totalTests} tests` : 'All tests passing!' 
@@ -279,7 +291,7 @@ export function GameProvider({ children }) {
     const lastBase = profile.baseDelays[Math.min(totalTests - 1, profile.baseDelays.length - 1)];
     const endDelay = lastBase * (0.85 + Math.random() * 0.3) * diffMult + 1500;
     events.push({
-      time: endDelay,
+      time: timeOffset + endDelay,
       action: 'gameover'
     });
 
@@ -319,7 +331,7 @@ export function GameProvider({ children }) {
       const newElapsed = Date.now() - startTimeRef.current;
       setElapsedTime(newElapsed);
       
-      if (isAiMode && aiEventsRef.current && aiEventsRef.current.length > 0) {
+      if (isAiModeRef.current && aiEventsRef.current && aiEventsRef.current.length > 0) {
         const pending = [];
         let shouldGameOver = false;
         
@@ -346,7 +358,7 @@ export function GameProvider({ children }) {
     }
   }, [isAiMode, challenge, startAiOpponent]);
 
-  const runTests = useCallback((force = false) => {
+  const runTests = useCallback(async (force = false) => {
     if ((!gameActive && !force) || !challenge) return;
     setRunError(null);
 
@@ -360,58 +372,101 @@ export function GameProvider({ children }) {
         return { tc, actual: ok ? 'Match' : 'No match', err: !ok ? 'Did not match expected pattern' : null, ok };
       });
     } else {
-      let fn;
-      try {
-        // eslint-disable-next-line no-new-func
-        fn = new Function(codeValue + `\nreturn ${challenge.functionName};`)();
-      } catch (e) {
-        setRunError(`SyntaxError: ${e.message}`);
-        playSound('fail');
-        return;
-      }
+      const workerCode = `
+        self.onmessage = function(e) {
+          const { code, functionName, testCases } = e.data;
+          try {
+            const fn = new Function(code + '\\nreturn ' + functionName)();
+            if (typeof fn !== 'function') {
+              self.postMessage({ error: functionName + ' is not a function.' });
+              return;
+            }
+            const results = testCases.map(tc => {
+              let actual = null, err = null;
+              try {
+                const clonedInputs = JSON.parse(JSON.stringify(tc.input));
+                actual = fn(...clonedInputs);
+              } catch (error) {
+                err = error.message;
+              }
+              return { actual, err };
+            });
+            self.postMessage({ results });
+          } catch (err) {
+            self.postMessage({ error: 'SyntaxError: ' + err.message });
+          }
+        };
+      `;
+      const blob = new Blob([workerCode], { type: 'application/javascript' });
+      const url = URL.createObjectURL(blob);
+      const worker = new Worker(url);
 
-      if (typeof fn !== 'function') {
-        setRunError(`${challenge.functionName} is not a function.`);
-        playSound('fail');
-        return;
-      }
-
-      results = challenge.testCases.map(tc => {
-        let actual, err = null;
-        try { 
-          const clonedInputs = JSON.parse(JSON.stringify(tc.input));
-          actual = fn(...clonedInputs); 
-        } catch (e) { err = e.message; }
-        const ok = !err && deepEqual(actual, tc.expected);
-        if (ok) passed++;
-        return { tc, actual, err, ok };
+      const workerPromise = new Promise((resolve, reject) => {
+        worker.onmessage = (e) => resolve(e.data);
+        worker.onerror = (e) => reject(new Error(e.message || 'Worker execution failed.'));
+        setTimeout(() => {
+          worker.terminate();
+          reject(new Error('Execution Timeout: Possible infinite loop detected!'));
+        }, 2000);
       });
+
+      worker.postMessage({ code: codeValue, functionName: challenge.functionName, testCases: challenge.testCases });
+
+      try {
+        const res = await workerPromise;
+        worker.terminate();
+        URL.revokeObjectURL(url);
+        
+        if (res.error) {
+          setRunError(res.error);
+          playSound('fail');
+          return;
+        }
+        
+        results = challenge.testCases.map((tc, i) => {
+          const actual = res.results[i].actual;
+          const err = res.results[i].err;
+          const ok = !err && deepEqual(actual, tc.expected);
+          if (ok) passed++;
+          return { tc, actual, err, ok };
+        });
+      } catch (e) {
+        worker.terminate();
+        URL.revokeObjectURL(url);
+        setRunError(e.message);
+        playSound('fail');
+        return;
+      }
     }
 
     setTestResults(results);
 
     if (!isAiMode) {
-      socket.send(JSON.stringify({
-        type: 'progress',
-        progress: passed,
-        status: passed === challenge.testCases.length ? 'All tests passing!' : `${passed}/${challenge.testCases.length} tests`
-      }));
+      if (sendMessage) {
+        sendMessage(JSON.stringify({
+          type: 'progress',
+          progress: passed,
+          status: passed === challenge.testCases.length ? 'All tests passing!' : `${passed}/${challenge.testCases.length} tests`
+        }));
+      }
     } else {
-      setPlayers(prev => ({...prev, [socket.id]: { ...prev[socket.id], progress: passed }}));
+      setPlayers(prev => ({...prev, [socketId]: { ...prev[socketId], progress: passed }}));
     }
 
     if (passed === challenge.testCases.length) {
       playSound('pass');
       if (!isAiMode) {
-        socket.send(JSON.stringify({ type: 'win' }));
+        if (sendMessage) {
+          sendMessage(JSON.stringify({ type: 'win' }));
+        }
       } else {
-        handleGameOver(socket.id);
+        if (handleGameOverRef.current) handleGameOverRef.current(socketId);
       }
     } else {
       if (passed > 0) playSound('pass');
       else playSound('fail');
     }
-  }, [gameActive, challenge, codeValue, socket, isAiMode]);
+  }, [gameActive, challenge, codeValue, socketId, isAiMode, sendMessage]);
 
   const launchVictoryParticles = useCallback(() => {
     const canvas = document.getElementById('victoryCanvas');
@@ -586,11 +641,11 @@ export function GameProvider({ children }) {
   const sendChat = useCallback((text) => {
     if (isAiMode) {
       showToast('AI Bot says: Beep boop! 🤖', 'chat');
-    } else if (socket && socket.send) {
-      socket.send(JSON.stringify({ type: 'chat', text }));
+    } else if (sendMessage) {
+      sendMessage(JSON.stringify({ type: 'chat', text }));
     }
     showToast(`You: ${text}`, 'chat');
-  }, [isAiMode, socket, showToast]);
+  }, [isAiMode, sendMessage, showToast]);
 
   const processedMessageRef = useRef(null);
 
@@ -630,13 +685,18 @@ export function GameProvider({ children }) {
         if (msg.leaverId === socketIdRef.current) {
           handleGameOver('opponent'); // We gave up
         } else {
-          showToast('Opponent fled! An AI bot is taking over...', 'info');
-          setIsAiMode(true);
-          setRoomCode('AI_MATCH');
-          
-          // If we are already racing, we must start the AI immediately
-          if (screenRef.current === 'game' && challengeRef.current) {
-            startAiOpponent(challengeRef.current);
+          if (msg.remainingPlayers > 1) {
+            showToast(`${msg.leaverName} fled the match!`, 'warn');
+          } else {
+            showToast('All opponents fled! An AI bot is taking over...', 'info');
+            setIsAiMode(true);
+            setRoomCode('AI_MATCH');
+            setSpeedSetting('chill'); // Be lenient on time when taking over
+            
+            // If we are already racing, we must start the AI immediately
+            if (screenRef.current === 'game' && challengeRef.current) {
+              startAiOpponent(challengeRef.current);
+            }
           }
         }
       }
@@ -645,7 +705,7 @@ export function GameProvider({ children }) {
           showToast(`${msg.senderName}: ${msg.text}`, 'chat');
         }
       }
-  }, [lastMessage, roomCode, startCountdown, enterStudyPhase, socketId, startRacingPhase, handleGameOver, isAiMode, showToast, startAiOpponent]);
+  }, [lastMessage, roomCode, startCountdown, enterStudyPhase, socketId, startRacingPhase, handleGameOver, isAiMode, showToast, startAiOpponent, setSpeedSetting]);
 
   useEffect(() => {
     handleGameOverRef.current = handleGameOver;
@@ -678,7 +738,7 @@ export function GameProvider({ children }) {
     speedSetting, setSpeedSetting, topic, setTopic,
     roomInput, setRoomInput,
     roomCode, isHost,
-    playerName, currentPlayer, opponentData, players,
+    playerName, setPlayerName, currentPlayer, opponentData, players,
     challenge, countdown, startCountdown,
     studyTimeRemaining, studyProgress, studyCanStart,
     gameActive, elapsedTime,
@@ -687,7 +747,8 @@ export function GameProvider({ children }) {
     handleCreateRoom, handleJoinRoom, copyRoomCode, toggleReady,
     triggerStartRace, runTests, useHint, resetCode, playAgain, goHome, handleGiveUp, sendChat,
     isLight, setIsLight,
-    isPaused, togglePause
+    isPaused, togglePause,
+    globalLeaderboard
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

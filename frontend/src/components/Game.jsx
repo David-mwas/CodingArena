@@ -185,6 +185,19 @@ export default function Game() {
                   {reaction}
                 </motion.button>
               ))}
+              <div className="flex items-center ml-2 border border-border rounded-lg overflow-hidden bg-card focus-within:border-purple-500/50 transition-colors">
+                <input 
+                  type="text" 
+                  placeholder="Send chat..." 
+                  className="bg-transparent border-none outline-none text-xs px-2 py-2 w-28 sm:w-40 text-text-main"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && e.target.value.trim()) {
+                      sendChat(e.target.value.trim());
+                      e.target.value = '';
+                    }
+                  }}
+                />
+              </div>
             </div>
             <AnimatePresence>
               {hintUsed && (
@@ -218,13 +231,18 @@ export default function Game() {
                     </span>
                     <div className="flex-1 min-w-0">
                       <div className={`text-xs font-mono font-semibold ${r.ok ? 'text-accent' : 'text-coral'}`}>
-                        {r.tc.display} <span className="text-muted/60">{'// ->'} {JSON.stringify(r.tc.expected)}</span>
+                        {r.tc.display} {r.tc.expected !== undefined && <span className="text-muted/60">{'// ->'} {JSON.stringify(r.tc.expected)}</span>}
                       </div>
                       {r.ok ? (
-                        <div className="text-xs text-muted mt-1">Expected: {JSON.stringify(r.tc.expected)} <span className="text-accent">&#10003;</span></div>
+                        <div className="text-xs text-muted mt-1">
+                          {r.tc.expected !== undefined ? `Expected: ${JSON.stringify(r.tc.expected)} ` : 'Required pattern matched '} 
+                          <span className="text-accent">&#10003;</span>
+                        </div>
                       ) : (
                         <>
-                          <div className="text-xs text-muted mt-1">Expected: {JSON.stringify(r.tc.expected)}</div>
+                          <div className="text-xs text-muted mt-1">
+                            {r.tc.expected !== undefined ? `Expected: ${JSON.stringify(r.tc.expected)}` : 'Expected a specific code structure, but it was not found.'}
+                          </div>
                           {r.err ? (
                             <div className="text-xs text-coral mt-0.5">Error: {r.err}</div>
                           ) : (

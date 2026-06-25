@@ -4,6 +4,16 @@ Code Arena is a real-time, high-fidelity competitive debugging platform. Designe
 
 ---
 
+![alt text](image.png)
+
+---
+
+![alt text](image-1.png)
+---
+
+![alt text](image-2.png)
+---
+
 ## 🌟 Features
 
 - **Real-Time Multiplayer:** Built on WebSockets for instant state synchronization, live racing, and presence detection.
