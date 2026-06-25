@@ -14,9 +14,10 @@ const Tour = () => {
   }, []);
 
   const handleJoyrideCallback = (data) => {
-    const { status, action } = data;
+    const { status, type, action } = data;
+    console.log('Joyride callback:', data);
     const finishedStatuses = [STATUS.FINISHED, STATUS.SKIPPED];
-    if (finishedStatuses.includes(status) || action === 'close' || action === 'skip') {
+    if (finishedStatuses.includes(status) || action === 'close' || action === 'skip' || type === 'tour:end') {
       setRun(false);
       localStorage.setItem('hasSeenTour', 'true');
     }
