@@ -100,7 +100,7 @@ export default function Landing() {
           </div>
         </motion.div>
 
-        <motion.div variants={itemVariants} className="max-w-3xl mx-auto w-full mb-4 text-left relative">
+        <motion.div variants={itemVariants} className="max-w-3xl mx-auto w-full mb-4 text-left relative tour-step-stats">
           <div className="absolute inset-0 border border-border opacity-20 rounded-xl pointer-events-none z-10"></div>
           <div className="bg-card/80 backdrop-blur-xl rounded-xl shadow-2xl p-4 sm:p-5 font-mono text-xs sm:text-sm overflow-hidden">
             
@@ -300,7 +300,7 @@ export default function Landing() {
                 <div className="absolute left-0 top-0 bottom-0 w-[1px] bg-border opacity-15"></div>
                 
                 {/* Topic Config */}
-                <motion.div layout>
+                <motion.div layout className="tour-step-topic">
                   <div className="flex items-center gap-1.5 mb-2">
                     <span className="text-text-main">topic</span><span className="text-muted">:</span>
                   </div>
@@ -384,7 +384,7 @@ export default function Landing() {
                 <div className="flex flex-wrap gap-3 pl-3 sm:pl-5 relative ml-1.5 mt-2">
                   <div className="absolute left-0 top-0 bottom-0 w-[1px] bg-border opacity-15"></div>
                   
-                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 tour-step-multiplayer">
                     <div className="flex items-center gap-2">
                       <span className="text-[#e4e8ef] text-sm font-semibold">enterARoomCode</span><span className="text-muted text-sm">:</span>
                       <div className="bg-black/40 shadow-inner border border-border/80 rounded-md px-3 py-2 flex items-center focus-within:border-accent focus-within:bg-black/60 transition-all ml-1">
@@ -418,7 +418,7 @@ export default function Landing() {
                     </button>
                     <button 
                       onClick={() => handleCreateRoom(true)} 
-                      className="speed-card bg-surface hover:bg-surface/80 border border-border rounded-lg px-6 py-2.5 flex items-center justify-center gap-2 text-sm font-bold text-purple-400 transition-all flex-1 sm:flex-none"
+                      className="tour-step-ai speed-card bg-surface hover:bg-surface/80 border border-border rounded-lg px-6 py-2.5 flex items-center justify-center gap-2 text-sm font-bold text-purple-400 transition-all flex-1 sm:flex-none"
                     >
                       <span role="img" aria-label="robot">🤖</span> Play AI
                     </button>

@@ -7,6 +7,7 @@ import Game from './components/Game';
 import Results from './components/Results';
 import ToastContainer from './components/ToastContainer';
 import MusicWidget from './components/MusicWidget';
+import Tour from './components/Tour';
 import { AnimatePresence } from 'framer-motion';
 
 function GameScreenManager() {
@@ -19,9 +20,10 @@ function GameScreenManager() {
       <MusicWidget />
       <ToastContainer />
       
+      <Tour />
       <button 
         onClick={() => setIsLight(prev => !prev)}
-        className="fixed top-4 right-4 z-50 w-10 h-10 rounded-full bg-surface border border-border flex items-center justify-center text-muted hover:text-accent transition-colors shadow-lg"
+        className="tour-step-theme fixed top-4 right-4 z-50 w-10 h-10 rounded-full bg-surface border border-border flex items-center justify-center text-muted hover:text-accent transition-colors shadow-lg"
         title="Toggle Theme"
       >
         <i className={`fas ${isLight ? 'fa-moon' : 'fa-sun'}`}></i>
