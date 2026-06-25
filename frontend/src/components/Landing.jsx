@@ -86,7 +86,6 @@ export default function Landing() {
 
       <div className="text-center max-w-2xl mx-auto w-full relative z-10 pt-4 sm:pt-0">
         <motion.div variants={itemVariants} className="mb-2">
-          <span className="inline-block px-3 py-1 text-[10px] font-mono rounded-full border border-accent/20 bg-accent/5 text-accent tracking-widest uppercase mb-4">Real-Time Competitive Debugging</span>
         </motion.div>
         
         <motion.h1 variants={itemVariants} className="glitch mb-4 text-3xl sm:text-5xl" data-text="Code Arena">Code Arena</motion.h1>
