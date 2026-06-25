@@ -8,8 +8,10 @@ const Tour = () => {
 
   useEffect(() => {
     const hasSeenTour = localStorage.getItem('hasSeenTour');
+    console.log('Mounting Tour. hasSeenTour in localStorage:', hasSeenTour);
     if (!hasSeenTour) {
       setRun(true);
+      localStorage.setItem('hasSeenTour', 'true');
     }
   }, []);
 
