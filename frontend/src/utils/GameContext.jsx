@@ -23,7 +23,29 @@ export function GameProvider({ children }) {
   const [roomCode, setRoomCode] = useState(null);
   const [isAiMode, setIsAiMode] = useState(false);
   const [speedSetting, setSpeedSetting] = useState('normal');
-  const [playerName] = useState(() => OPPONENT_NAMES[Math.floor(Math.random() * OPPONENT_NAMES.length)]);
+  const [topic, setTopic] = useState('javascript');
+  const [playerName, setPlayerName] = useState(() => {
+    try {
+      const saved = localStorage.getItem('codeArenaPlayerName');
+      if (saved) return saved;
+      const generated = OPPONENT_NAMES[Math.floor(Math.random() * OPPONENT_NAMES.length)] + '_' + Math.floor(Math.random() * 999);
+      localStorage.setItem('codeArenaPlayerName', generated);
+      return generated;
+    } catch(e) {
+      return OPPONENT_NAMES[0];
+    }
+  });
+  const [playerId] = useState(() => {
+    try {
+      const saved = localStorage.getItem('codeArenaPlayerId');
+      if (saved) return saved;
+      const generated = 'user_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('codeArenaPlayerId', generated);
+      return generated;
+    } catch(e) {
+      return 'user_temp';
+    }
+  });
   const [players, setPlayers] = useState({});
   const [isHost, setIsHost] = useState(false);
   const [socketId, setSocketId] = useState(null);
@@ -42,6 +64,11 @@ export function GameProvider({ children }) {
   const [runError, setRunError] = useState(null);
   const [hintUsed, setHintUsed] = useState(false);
   const [winner, setWinner] = useState(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const isPausedRef = useRef(false);
+  const pauseTimeRef = useRef(null);
+  const aiEventsRef = useRef([]);
+  const handleGameOverRef = useRef(null);
   
   // Refs for mid-match transitions
   const challengeRef = useRef(null);
@@ -49,7 +76,13 @@ export function GameProvider({ children }) {
 
   const [aiState, setAiState] = useState({ name: 'AI Bot', progress: 0, status: 'Analyzing...', ready: true });
   const [solutionRevealed, setSolutionRevealed] = useState(false);
-  const [globalLeaderboard, setGlobalLeaderboard] = useState([]);
+  const [globalLeaderboard, setGlobalLeaderboard] = useState(() => {
+    try {
+      const saved = localStorage.getItem('codeArenaLeaderboard');
+      if (saved) return JSON.parse(saved);
+    } catch(e) {}
+    return [];
+  });
 
   const startTimeRef = useRef(0);
   const timerIntervalRef = useRef(null);
@@ -79,7 +112,8 @@ export function GameProvider({ children }) {
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000);
   }, []);
 
-  const socketUrl = isAiMode ? null : `wss://coding-arena-ion2.onrender.com/?room=${roomCode || 'lobby'}&name=${playerName}`;
+  const baseUrl = import.meta.env.PROD ? 'wss://coding-arena-ion2.onrender.com' : 'ws://localhost:1999';
+  const socketUrl = isAiMode ? null : `${baseUrl}/?room=${roomCode || 'lobby'}&name=${playerName}&id=${playerId}`;
   const { sendMessage, lastMessage } = useWebSocket(socketUrl, {
     shouldReconnect: () => true,
   });
@@ -203,10 +237,12 @@ export function GameProvider({ children }) {
         clearInterval(iv);
         setCountdown(null);
         if (roomCode === 'AI_MATCH') {
-          const ch = CHALLENGES[Math.floor(Math.random() * CHALLENGES.length)];
+          const available = CHALLENGES.filter(c => c.topic === topic || !c.topic);
+          const ch = available[Math.floor(Math.random() * available.length)] || CHALLENGES[0];
           enterStudyPhase(ch);
         } else if (socket.id && players[socket.id]?.isHost) {
-          const ch = CHALLENGES[Math.floor(Math.random() * CHALLENGES.length)];
+          const available = CHALLENGES.filter(c => c.topic === topic || !c.topic);
+          const ch = available[Math.floor(Math.random() * available.length)] || CHALLENGES[0];
           socket.send(JSON.stringify({ type: 'start_study', challengeId: ch.id }));
         }
       }
@@ -217,29 +253,37 @@ export function GameProvider({ children }) {
 
   const startAiOpponent = useCallback((ch) => {
     const profile = SPEED_PROFILES[speedSetting];
-    const diffMult = ch.difficulty === 'Easy' ? 0.85 : ch.difficulty === 'Medium' ? 1.15 : 1.5;
+    let diffMult = ch.difficulty === 'Easy' ? 0.85 : ch.difficulty === 'Medium' ? 1.15 : 1.5;
+    
+    // Topic-based difficulty modifier (Frameworks & syntax-heavy languages take humans longer to type)
+    const heavyTopics = ['react', 'vue', 'node', 'java', 'docker', 'sql', 'git'];
+    if (heavyTopics.includes(ch.topic)) diffMult *= 1.4;
+    else if (ch.topic === 'python' || ch.topic === 'php') diffMult *= 1.2;
     
     // Start typing immediately to feel responsive
     setAiState(prev => ({ ...prev, progress: 0, status: 'Typing...' }));
 
+    const events = [];
     const totalTests = ch.testCases.length;
     for (let i = 0; i < totalTests; i++) {
       const base = profile.baseDelays[Math.min(i, profile.baseDelays.length - 1)];
-      const t = setTimeout(() => {
-        setAiState(prev => ({ 
-          ...prev, 
-          progress: i + 1,
-          status: i + 1 < totalTests ? `${i + 1}/${totalTests} tests` : 'All tests passing!' 
-        }));
-      }, base * (0.75 + Math.random() * 0.5) * diffMult);
-      opponentTimersRef.current.push(t);
+      const delay = base * (0.75 + Math.random() * 0.5) * diffMult;
+      events.push({
+        time: delay,
+        action: 'progress',
+        progress: i + 1,
+        status: i + 1 < totalTests ? `${i + 1}/${totalTests} tests` : 'All tests passing!' 
+      });
     }
 
     const lastBase = profile.baseDelays[Math.min(totalTests - 1, profile.baseDelays.length - 1)];
-    const t2 = setTimeout(() => {
-      handleGameOver('opponent');
-    }, lastBase * (0.85 + Math.random() * 0.3) * diffMult + 1500);
-    opponentTimersRef.current.push(t2);
+    const endDelay = lastBase * (0.85 + Math.random() * 0.3) * diffMult + 1500;
+    events.push({
+      time: endDelay,
+      action: 'gameover'
+    });
+
+    aiEventsRef.current = events;
   }, [speedSetting]);
 
   const triggerStartRace = useCallback(() => {
@@ -258,6 +302,8 @@ export function GameProvider({ children }) {
     setMusicState(prev => ({ ...prev, mood: 'race' }));
     
     setGameActive(true);
+    setIsPaused(false);
+    isPausedRef.current = false;
     setTestResults(null);
     setRunError(null);
     setScreen('game');
@@ -268,7 +314,31 @@ export function GameProvider({ children }) {
     
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     timerIntervalRef.current = setInterval(() => {
-      setElapsedTime(Date.now() - startTimeRef.current);
+      if (isPausedRef.current) return;
+      
+      const newElapsed = Date.now() - startTimeRef.current;
+      setElapsedTime(newElapsed);
+      
+      if (isAiMode && aiEventsRef.current && aiEventsRef.current.length > 0) {
+        const pending = [];
+        let shouldGameOver = false;
+        
+        for (let ev of aiEventsRef.current) {
+          if (newElapsed >= ev.time) {
+            if (ev.action === 'progress') {
+              setAiState(prev => ({ ...prev, progress: ev.progress, status: ev.status }));
+            } else if (ev.action === 'gameover') {
+              shouldGameOver = true;
+            }
+          } else {
+            pending.push(ev);
+          }
+        }
+        aiEventsRef.current = pending;
+        if (shouldGameOver && handleGameOverRef.current) {
+          handleGameOverRef.current('opponent');
+        }
+      }
     }, 100);
 
     if (isAiMode && challenge) {
@@ -276,38 +346,47 @@ export function GameProvider({ children }) {
     }
   }, [isAiMode, challenge, startAiOpponent]);
 
-  const runTests = useCallback(() => {
-    if (!gameActive || !challenge) return;
+  const runTests = useCallback((force = false) => {
+    if ((!gameActive && !force) || !challenge) return;
     setRunError(null);
 
-    let fn;
-    try {
-      // eslint-disable-next-line no-new-func
-      fn = new Function(codeValue + `\nreturn ${challenge.functionName};`)();
-    } catch (e) {
-      setRunError(`SyntaxError: ${e.message}`);
-      playSound('fail');
-      return;
-    }
-
-    if (typeof fn !== 'function') {
-      setRunError(`${challenge.functionName} is not a function.`);
-      playSound('fail');
-      return;
-    }
-
     let passed = 0;
-    const results = challenge.testCases.map(tc => {
-      let actual, err = null;
-      try { 
-        // Deep clone inputs to prevent user code from mutating test case state
-        const clonedInputs = JSON.parse(JSON.stringify(tc.input));
-        actual = fn(...clonedInputs); 
-      } catch (e) { err = e.message; }
-      const ok = !err && deepEqual(actual, tc.expected);
-      if (ok) passed++;
-      return { tc, actual, err, ok };
-    });
+    let results = [];
+
+    if (challenge.evalMethod === 'regex') {
+      results = challenge.testCases.map(tc => {
+        const ok = tc.regex.test(codeValue);
+        if (ok) passed++;
+        return { tc, actual: ok ? 'Match' : 'No match', err: !ok ? 'Did not match expected pattern' : null, ok };
+      });
+    } else {
+      let fn;
+      try {
+        // eslint-disable-next-line no-new-func
+        fn = new Function(codeValue + `\nreturn ${challenge.functionName};`)();
+      } catch (e) {
+        setRunError(`SyntaxError: ${e.message}`);
+        playSound('fail');
+        return;
+      }
+
+      if (typeof fn !== 'function') {
+        setRunError(`${challenge.functionName} is not a function.`);
+        playSound('fail');
+        return;
+      }
+
+      results = challenge.testCases.map(tc => {
+        let actual, err = null;
+        try { 
+          const clonedInputs = JSON.parse(JSON.stringify(tc.input));
+          actual = fn(...clonedInputs); 
+        } catch (e) { err = e.message; }
+        const ok = !err && deepEqual(actual, tc.expected);
+        if (ok) passed++;
+        return { tc, actual, err, ok };
+      });
+    }
 
     setTestResults(results);
 
@@ -385,8 +464,15 @@ export function GameProvider({ children }) {
 
   const handleGameOver = useCallback((winnerId) => {
     setGameActive(false);
+    setIsPaused(false);
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     opponentTimersRef.current.forEach(clearTimeout);
+
+    // Auto-run tests one last time so the user sees their final progress
+    // even if they didn't get time to hit submit before the game ended.
+    if (winnerId !== socket.id) {
+      setTimeout(() => runTests(true), 100);
+    }
 
     const isWin = winnerId === socket.id;
     setWinner(isWin ? 'player' : 'opponent');
@@ -405,6 +491,12 @@ export function GameProvider({ children }) {
         if (!newStats.challengeBest[challenge.id] || finalElapsed < newStats.challengeBest[challenge.id].bestTime) {
           newStats.challengeBest[challenge.id] = { bestTime: finalElapsed };
         }
+        
+        let xpGained = 100;
+        if (newStats.currentStreak > 1) xpGained += Math.min(newStats.currentStreak * 10, 50);
+        if (challenge.difficulty === 'Medium') xpGained += 25;
+        if (challenge.difficulty === 'Hard') xpGained += 50;
+        newStats.xp = (newStats.xp || 0) + xpGained;
         
         // Record global leaderboard time if multiplayer match
         if (!isAiMode && socket && socket.send) {
@@ -440,9 +532,19 @@ export function GameProvider({ children }) {
 
   const useHint = useCallback(() => {
     if (!challenge) return;
-    setHintUsed(true);
-    showToast('Hint revealed!', 'warn');
-  }, [challenge, showToast]);
+    if (hintUsed) return;
+    
+    if ((stats.xp || 0) >= 50) {
+      const newStats = loadStats();
+      newStats.xp = (newStats.xp || 0) - 50;
+      saveStats(newStats);
+      setStats(newStats);
+      setHintUsed(true);
+      showToast('Hint revealed! (-50 XP)', 'warn');
+    } else {
+      showToast(`Need 50 XP for hint. You have ${stats.xp || 0} XP. Win matches to earn XP!`, 'error');
+    }
+  }, [challenge, hintUsed, stats.xp, showToast]);
 
   const resetCode = useCallback(() => {
     if (!challenge) return;
@@ -481,6 +583,15 @@ export function GameProvider({ children }) {
     }
   }, [gameActive, isAiMode, socket, handleGameOver]);
 
+  const sendChat = useCallback((text) => {
+    if (isAiMode) {
+      showToast('AI Bot says: Beep boop! 🤖', 'chat');
+    } else if (socket && socket.send) {
+      socket.send(JSON.stringify({ type: 'chat', text }));
+    }
+    showToast(`You: ${text}`, 'chat');
+  }, [isAiMode, socket, showToast]);
+
   const processedMessageRef = useRef(null);
 
   useEffect(() => {
@@ -513,6 +624,7 @@ export function GameProvider({ children }) {
       }
       if (msg.type === 'global_leaderboard') {
         setGlobalLeaderboard(msg.data);
+        try { localStorage.setItem('codeArenaLeaderboard', JSON.stringify(msg.data)); } catch(e) {}
       }
       if (msg.type === 'player_left') {
         if (msg.leaverId === socketIdRef.current) {
@@ -528,7 +640,31 @@ export function GameProvider({ children }) {
           }
         }
       }
+      if (msg.type === 'chat') {
+        if (msg.senderId !== socketIdRef.current) {
+          showToast(`${msg.senderName}: ${msg.text}`, 'chat');
+        }
+      }
   }, [lastMessage, roomCode, startCountdown, enterStudyPhase, socketId, startRacingPhase, handleGameOver, isAiMode, showToast, startAiOpponent]);
+
+  useEffect(() => {
+    handleGameOverRef.current = handleGameOver;
+  }, [handleGameOver]);
+
+  const togglePause = useCallback(() => {
+    if (!gameActive || !isAiMode) return;
+    setIsPaused(p => {
+      const newPaused = !p;
+      isPausedRef.current = newPaused;
+      if (newPaused) {
+        pauseTimeRef.current = Date.now();
+      } else {
+        const pauseDuration = Date.now() - pauseTimeRef.current;
+        startTimeRef.current += pauseDuration;
+      }
+      return newPaused;
+    });
+  }, [gameActive, isAiMode]);
 
   let currentPlayer = isAiMode ? { ready: true, progress: testResults?.filter(r=>r.ok)?.length || 0, status: 'Thinking...' } : players[socketId];
   let opponent = isAiMode ? null : Object.entries(players).find(([id]) => id !== socketId);
@@ -539,7 +675,7 @@ export function GameProvider({ children }) {
     stats, setStats, handleResetStats,
     toasts, showToast,
     musicState, toggleMusic, setMusicVolume,
-    speedSetting, setSpeedSetting,
+    speedSetting, setSpeedSetting, topic, setTopic,
     roomInput, setRoomInput,
     roomCode, isHost,
     playerName, currentPlayer, opponentData, players,
@@ -549,8 +685,9 @@ export function GameProvider({ children }) {
     codeValue, setCodeValue, testResults, runError, hintUsed,
     winner, solutionRevealed, setSolutionRevealed,
     handleCreateRoom, handleJoinRoom, copyRoomCode, toggleReady,
-    triggerStartRace, runTests, useHint, resetCode, playAgain, goHome, handleGiveUp,
-    isLight, setIsLight
+    triggerStartRace, runTests, useHint, resetCode, playAgain, goHome, handleGiveUp, sendChat,
+    isLight, setIsLight,
+    isPaused, togglePause
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

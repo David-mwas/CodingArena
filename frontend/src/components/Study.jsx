@@ -54,6 +54,14 @@ export default function Study() {
                 language="javascript"
                 theme={isLight ? "vs" : "vs-dark"}
                 value={challenge.brokenCode}
+                loading={
+                  <div className="p-4 w-full h-full flex flex-col gap-3 bg-surface/50">
+                    <div className="h-3 bg-muted/20 rounded w-1/3 animate-pulse"></div>
+                    <div className="h-3 bg-muted/20 rounded w-1/2 animate-pulse ml-4"></div>
+                    <div className="h-3 bg-muted/20 rounded w-1/4 animate-pulse ml-4"></div>
+                    <div className="flex items-center gap-2 mt-4 text-xs text-muted font-mono"><div className="w-3 h-3 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>Loading engine...</div>
+                  </div>
+                }
                 options={{
                   readOnly: true,
                   minimap: { enabled: false },

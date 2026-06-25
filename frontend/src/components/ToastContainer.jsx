@@ -8,7 +8,8 @@ export default function ToastContainer() {
     info: 'border-cyan bg-cyan/10 text-cyan',
     success: 'border-accent bg-accent/10 text-accent',
     error: 'border-coral bg-coral/10 text-coral',
-    warn: 'border-orange bg-orange/10 text-orange'
+    warn: 'border-orange bg-orange/10 text-orange',
+    chat: 'border-purple-500 bg-purple-500/10 text-white'
   };
 
   return (

@@ -3,6 +3,12 @@ import { WebSocketServer } from 'ws';
 import cors from 'cors';
 import http from 'http';
 import { v4 as uuidv4 } from 'uuid';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors());
@@ -16,8 +22,24 @@ const wss = new WebSocketServer({ server });
 // State grouped by roomCode
 const rooms = {};
 
-// In-memory global leaderboard
-const globalLeaderboard = [];
+// Persistent global leaderboard
+const leaderboardPath = path.join(__dirname, 'leaderboard.json');
+let globalLeaderboard = [];
+try {
+  if (fs.existsSync(leaderboardPath)) {
+    globalLeaderboard = JSON.parse(fs.readFileSync(leaderboardPath, 'utf8'));
+  }
+} catch (e) {
+  console.error('Failed to load leaderboard:', e);
+}
+
+function saveLeaderboard() {
+  try {
+    fs.writeFileSync(leaderboardPath, JSON.stringify(globalLeaderboard));
+  } catch (e) {
+    console.error('Failed to save leaderboard:', e);
+  }
+}
 
 wss.on('connection', (ws, req) => {
   // Parse roomCode and name from URL query params
@@ -159,6 +181,15 @@ wss.on('connection', (ws, req) => {
       broadcastState();
     }
     
+    if (msg.type === 'chat') {
+      broadcast({ 
+        type: 'chat', 
+        senderId: socketId, 
+        senderName: room.players[socketId]?.name || 'Opponent', 
+        text: msg.text 
+      });
+    }
+    
     if (msg.type === 'get_leaderboard') {
       ws.send(JSON.stringify({ type: 'global_leaderboard', data: globalLeaderboard }));
     }
@@ -176,11 +207,12 @@ wss.on('connection', (ws, req) => {
       globalLeaderboard.sort((a, b) => a.time - b.time);
       if (globalLeaderboard.length > 10) globalLeaderboard.pop();
       
-      // Broadcast new leaderboard to everyone connected (if we had a global list of all WS, 
-      // but here we can just broadcast to this room, or we can iterate over wss.clients)
+      saveLeaderboard();
+      
+      // Broadcast new leaderboard to everyone connected
       const lbMsg = JSON.stringify({ type: 'global_leaderboard', data: globalLeaderboard });
       wss.clients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
+        if (client.readyState === 1) { // 1 means OPEN
           client.send(lbMsg);
         }
       });
@@ -216,5 +248,5 @@ wss.on('connection', (ws, req) => {
 
 const PORT = process.env.PORT || 1999;
 server.listen(PORT, () => {
-  console.log(`Backend running on port ${PORT}`);
+  console.log(`Backend running on https://localhost:${PORT}`);
 });

@@ -5,7 +5,7 @@ export function loadStats() {
     const d = localStorage.getItem(STATS_KEY);
     if (d) return JSON.parse(d);
   } catch (e) {}
-  return { totalWins: 0, totalLosses: 0, currentStreak: 0, bestStreak: 0, fastestWin: null, totalGames: 0, challengeBest: {} };
+  return { totalWins: 0, totalLosses: 0, currentStreak: 0, bestStreak: 0, fastestWin: null, totalGames: 0, challengeBest: {}, xp: 0 };
 }
 
 export function saveStats(stats) {

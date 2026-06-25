@@ -8,7 +8,8 @@ export default function Game() {
     roomCode, challenge, elapsedTime, 
     currentPlayer, opponentData, playerName, players,
     codeValue, setCodeValue, runTests, useHint, resetCode, hintUsed,
-    testResults, runError, handleGiveUp, isLight
+    testResults, runError, handleGiveUp, sendChat, isLight,
+    isPaused, togglePause
   } = useGame();
 
   const handleEditorWillMount = (monaco) => {
@@ -107,7 +108,14 @@ export default function Game() {
               defaultLanguage="javascript"
               theme={isLight ? 'vs' : 'gamify-dark'}
               beforeMount={handleEditorWillMount}
-              loading={<div className="text-muted text-sm flex items-center justify-center h-full gap-2"><div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin"></div> Loading Code Engine...</div>}
+              loading={
+                <div className="p-4 w-full h-full flex flex-col gap-3 bg-surface/50">
+                  <div className="h-3 bg-muted/20 rounded w-1/3 animate-pulse"></div>
+                  <div className="h-3 bg-muted/20 rounded w-1/2 animate-pulse ml-4"></div>
+                  <div className="h-3 bg-muted/20 rounded w-1/4 animate-pulse ml-4"></div>
+                  <div className="flex items-center gap-2 mt-4 text-xs text-muted font-mono"><div className="w-3 h-3 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>Loading engine...</div>
+                </div>
+              }
               value={codeValue}
               onChange={(val) => setCodeValue(val || '')}
               options={{
@@ -132,9 +140,9 @@ export default function Game() {
             <motion.button 
               whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
               onClick={useHint} 
-              className="btn-glow px-4 py-2.5 bg-card hover:bg-border text-orange font-semibold rounded-lg text-sm transition-colors border border-border"
+              className={`btn-glow px-4 py-2.5 bg-card font-semibold rounded-lg text-sm transition-colors border ${hintUsed ? 'border-border text-muted/50 cursor-not-allowed' : 'border-border text-orange hover:bg-border'}`}
             >
-              <i className="fas fa-lightbulb mr-1"></i> Hint
+              <i className="fas fa-lightbulb mr-1"></i> Hint {!hintUsed && <span className="text-[10px] opacity-75 ml-1">-50 XP</span>}
             </motion.button>
             <motion.button 
               whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
@@ -146,10 +154,38 @@ export default function Game() {
             <motion.button 
               whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
               onClick={handleGiveUp} 
-              className="btn-glow px-4 py-2.5 bg-card hover:bg-coral/20 text-coral font-semibold rounded-lg text-sm transition-colors border border-border ml-auto"
+              className="btn-glow px-4 py-2.5 bg-card hover:bg-coral/20 text-coral font-semibold rounded-lg text-sm transition-colors border border-border"
             >
               <i className="fas fa-flag mr-1"></i> Give Up
             </motion.button>
+            {roomCode === 'AI_MATCH' && (
+              <motion.button 
+                whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                onClick={togglePause} 
+                className="btn-glow px-4 py-2.5 bg-card hover:bg-border text-muted font-semibold rounded-lg text-sm transition-colors border border-border ml-2"
+              >
+                {isPaused ? (
+                  <><i className="fas fa-play mr-1 text-accent"></i> Resume</>
+                ) : (
+                  <><i className="fas fa-pause mr-1 text-orange"></i> Pause</>
+                )}
+              </motion.button>
+            )}
+            <div className="h-6 w-px bg-border mx-1 hidden sm:block"></div>
+            <div className="flex items-center gap-1 ml-auto sm:ml-0">
+              <span className="text-xs text-muted font-semibold mr-1 hidden sm:block">React:</span>
+              {['🔥', '😅', '👀', '💀', 'GG'].map(reaction => (
+                <motion.button
+                  key={reaction}
+                  whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.85 }}
+                  onClick={() => sendChat(reaction)}
+                  className="w-8 h-8 flex items-center justify-center bg-card border border-border rounded-lg hover:bg-surface-light hover:border-purple-500/50 transition-all text-sm"
+                  title={`Send ${reaction}`}
+                >
+                  {reaction}
+                </motion.button>
+              ))}
+            </div>
             <AnimatePresence>
               {hintUsed && (
                 <motion.span 
