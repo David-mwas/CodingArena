@@ -67,6 +67,8 @@ export function GameProvider({ children }) {
   const [studyCanStart, setStudyCanStart] = useState(false);
   
   const [gameActive, setGameActive] = useState(false);
+  const gameActiveRef = useRef(false);
+  useEffect(() => { gameActiveRef.current = gameActive; }, [gameActive]);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [codeValue, setCodeValue] = useState('');
   const [testResults, setTestResults] = useState(null);
